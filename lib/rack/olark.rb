@@ -15,14 +15,21 @@ module Rack
       end
 
       @app, @options = app, DEFAULTS.merge(options)
-      @id, @tag, @paths = [@options.delete(:id),
+      @id, @tag, @paths, @not_paths = [@options.delete(:id),
                            @options.delete(:tag),
-                           @options.delete(:paths)]
+                           @options.delete(:paths),
+                           @options.delete(:not_paths)]
 
       if @paths.is_a?(Array)
         @paths.map! { |path| path.is_a?(Regexp) ? path : /^#{Regexp.escape(path.to_s)}$/ }
       else
         @paths = []
+      end
+
+      if @not_paths.is_a?(Array)
+        @not_paths.map! { |path| path.is_a?(Regexp) ? path : /^#{Regexp.escape(path.to_s)}$/ }
+      else
+        @not_paths = []
       end
 
       @option_js = "olark.identify('#{@id}');"
@@ -38,6 +45,7 @@ module Rack
       @status, @headers, @response = @app.call(env)
       @request = Rack::Request.new(env)
       valid_path = @paths.select { |path| @request.path_info =~ path }.length > 0
+      valid_not_path = @not_paths.select { |path| @request.path_info =~ path }.length > 0
 
       # Deprecation warning, repeated and annoying. Sorry about your log space.
       if @options[:format]
@@ -46,7 +54,7 @@ module Rack
         logger.write("Rack::Olark: The 'format' option no longer works! See README.md for details.\n")
       end
 
-      if html? && (@paths.empty? || valid_path)
+      if html? && (@paths.empty? || valid_path) && (@not_paths.empty? || !valid_not_path)
         response = Rack::Response.new([], @status, @headers)
         @response.each { |fragment| response.write(inject(fragment)) }
         response.finish
