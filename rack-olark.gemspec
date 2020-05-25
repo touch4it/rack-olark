@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name        = 'rack-olark'
   s.version     = File.read(File.expand_path('../VERSION', __FILE__)).strip
-  s.date        = Date.today.to_s
+  s.date        = '2013-07-09'
   s.platform    = Gem::Platform::RUBY
   s.authors     = ['Dan Poggi']
   s.email       = ['dan.poggi@gmail.com']
